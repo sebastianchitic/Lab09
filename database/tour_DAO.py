@@ -1,14 +1,15 @@
 from database.DB_connect import DBConnect
-from model.tour import Tour
+from typing import Dict, Optional
 
 class TourDAO:
 
     @staticmethod
-    def get_tour() -> dict[str, Tour] | None:
+    def get_tour() -> dict | None:
         """
         Restituisce tutti i tour
         :return: un dizionario di tutti i Tour
         """
+        from model.tour import Tour
         cnx = DBConnect.get_connection()
         result = {}
         if cnx is None:
@@ -16,7 +17,7 @@ class TourDAO:
             return None
 
         cursor = cnx.cursor(dictionary=True)
-        query = """ ADD YOUR QUERY """ # TODO
+        query = """ SELECT * FROM tour """
         try:
             cursor.execute(query)
             for row in cursor:
@@ -50,7 +51,7 @@ class TourDAO:
             return None
 
         cursor = cnx.cursor(dictionary=True)
-        query = """ ADD YOUR QUERY """ # TODO
+        query = """ SELECT * FROM tour_attrazione"""
         try:
             cursor.execute(query)
             for row in cursor:

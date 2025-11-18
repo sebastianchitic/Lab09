@@ -1,23 +1,24 @@
 from database.DB_connect import DBConnect
-from model.regione import Regione
+from typing import List
+
 
 class RegioneDAO:
-    
     @staticmethod
-    def get_regioni() -> list[Regione] | None:
+    def get_regioni() -> List | None:
         """
         Restituisce tutte le regioni
-        :return: lista di tutte le Regioni
+        :return: una lista di Regione
         """
+        from model.regione import Regione
+
         cnx = DBConnect.get_connection()
         result = []
-
         if cnx is None:
             print("❌ Errore di connessione al database.")
             return None
 
         cursor = cnx.cursor(dictionary=True)
-        query = """ ADD YOUR QUERY """ # TODO
+        query = """SELECT * FROM regione"""
         try:
             cursor.execute(query)
             for row in cursor:

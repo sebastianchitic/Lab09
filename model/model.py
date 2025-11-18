@@ -11,7 +11,7 @@ class Model:
         self._valore_ottimo: int = -1
         self._costo = 0
 
-        # TODO: Aggiungere eventuali altri attributi
+        self.tour_per_regione = {}
 
         # Caricamento
         self.load_tour()
@@ -33,13 +33,22 @@ class Model:
 
     def load_relazioni(self):
         """
-            Interroga il database per ottenere tutte le relazioni fra tour e attrazioni e salvarle nelle strutture dati
-            Collega tour <-> attrazioni.
-            --> Ogni Tour ha un set di Attrazione.
-            --> Ogni Attrazione ha un set di Tour.
+        Interroga il database per ottenere tutte le relazioni fra tour e attrazioni
         """
+        relazioni = TourDAO.get_tour_attrazioni()
 
-        # TODO
+        for tour in self.tour_map.values():
+            tour.attrazioni = set()
+
+        for relazione in relazioni:
+
+            id_tour = relazione["id_tour"]
+            id_attrazione = relazione["id_attrazione"]
+
+            tour = self.tour_map.get(id_tour)
+            attrazione = self.attrazioni_map.get(id_attrazione)
+
+
 
     def genera_pacchetto(self, id_regione: str, max_giorni: int = None, max_budget: float = None):
         """
@@ -56,11 +65,77 @@ class Model:
         self._costo = 0
         self._valore_ottimo = -1
 
-        # TODO
+        tour_della_regione = []
+        for tour in self.tour_map.values():
+            if tour.id_regione == id_regione:
+                tour_della_regione.append(tour)
+
+        if not tour_della_regione:
+            return self._pacchetto_ottimo, self._costo, self._valore_ottimo
+
+        self._ricorsione(
+            start_index=0,
+            pacchetto_parziale = [],
+            durata_corrente=0,
+            costo_corrente=0,
+            valore_corrente=0,
+            attrazioni_usate=set(),
+            tour_disponibili=tour_della_regione,
+            max_giorni=max_giorni,
+            max_budget=max_budget
+        )
 
         return self._pacchetto_ottimo, self._costo, self._valore_ottimo
 
-    def _ricorsione(self, start_index: int, pacchetto_parziale: list, durata_corrente: int, costo_corrente: float, valore_corrente: int, attrazioni_usate: set):
-        """ Algoritmo di ricorsione che deve trovare il pacchetto che massimizza il valore culturale"""
+    def _ricorsione(self, start_index: int, pacchetto_parziale: list, durata_corrente: int,
+                    costo_corrente: float, valore_corrente: int, attrazioni_usate: set,
+                    tour_disponibili: list, max_giorni: int, max_budget: float):
+        """
+        Algoritmo ricorsivo con backtracking per trovare il pacchetto ottimale
+        """
+        # 🟤 A - Aggiorna soluzione ottima se migliore
+        if valore_corrente > self._valore_ottimo:
+            self._valore_ottimo = valore_corrente
+            self._pacchetto_ottimo = pacchetto_parziale.copy()
+            self._costo = costo_corrente
 
-        # TODO: è possibile cambiare i parametri formali della funzione se ritenuto opportuno
+        # 🔴 E - Ricorsione
+        for i in range(start_index, len(tour_disponibili)):
+            tour = tour_disponibili[i]
+
+            # 🟡 C - Verifica vincoli prima di procedere
+            # Vincolo giorni
+            if max_giorni is not None and durata_corrente + tour.durata_giorni > max_giorni:
+                continue
+
+            # Vincolo budget
+            if max_budget is not None and costo_corrente + tour.costo > max_budget:
+                continue
+
+            # Vincolo attrazioni duplicate
+            if not hasattr(tour, 'attrazioni'):
+                continue
+
+            nuove_attrazioni = tour.attrazioni - attrazioni_usate
+            if not nuove_attrazioni:
+                continue  # Tour non aggiunge nuove attrazioni
+
+            # 🟢 B - Calcola il valore aggiuntivo
+            valore_aggiuntivo = sum(attr.valore_culturale for attr in nuove_attrazioni)
+
+            # 🔵 D - Aggiorna stato corrente
+            pacchetto_parziale.append(tour)
+            nuovo_valore = valore_corrente + valore_aggiuntivo
+            nuova_durata = durata_corrente + tour.durata_giorni
+            nuovo_costo = costo_corrente + tour.costo
+            nuove_attrazioni_usate = attrazioni_usate.union(nuove_attrazioni)
+
+            # Ricorsione
+            self._ricorsione(i + 1, pacchetto_parziale, nuova_durata, nuovo_costo,
+                             nuovo_valore, nuove_attrazioni_usate, tour_disponibili,
+                             max_giorni, max_budget)
+
+            # 🟣 F - Backtracking
+            pacchetto_parziale.pop()
+
+

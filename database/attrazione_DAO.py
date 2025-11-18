@@ -1,23 +1,24 @@
 from database.DB_connect import DBConnect
-from model.attrazione import Attrazione
+from typing import List, Optional, Dict
+
 
 class AttrazioneDAO:
-
     @staticmethod
-    def get_attrazioni() -> dict[str, Attrazione] | None:
+    def get_attrazioni() -> Dict | None:
         """
         Restituisce tutte le attrazioni
-        :return: un dizionario di tutte le Attrazioni
+        :return: un dizionario di Attrazione
         """
+        from model.attrazione import Attrazione
+
         cnx = DBConnect.get_connection()
         result = {}
-
         if cnx is None:
             print("❌ Errore di connessione al database.")
             return None
 
         cursor = cnx.cursor(dictionary=True)
-        query = """ ADD YOUR QUERY """ # TODO
+        query = """SELECT * FROM attrazione"""
         try:
             cursor.execute(query)
             for row in cursor:
