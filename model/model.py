@@ -48,6 +48,10 @@ class Model:
             tour = self.tour_map.get(id_tour)
             attrazione = self.attrazioni_map.get(id_attrazione)
 
+            if tour is not None and attrazione is not None:
+                tour.attrazioni.add(attrazione)
+
+
 
 
     def genera_pacchetto(self, id_regione: str, max_giorni: int = None, max_budget: float = None):
